@@ -19,6 +19,22 @@ class DatasetCatalog(object):
             'img_dir': 'coco/test2017',
             'ann_file': 'coco/annotations/image_info_test-dev2017.json'
         },
+        'train_coco': {
+            'img_dir': 'data_coco_DATASET/images/Train',
+            'ann_file': 'data_coco_DATASET/annotations/train.json'
+        },
+        'val_coco': {
+            'img_dir': 'data_coco_DATASET/images/Train',
+            'ann_file': 'data_coco_DATASET/annotations/val.json'
+        },
+        'first_batch_train_coco': {
+            'img_dir': 'firstBatch/images/default',
+            'ann_file': 'firstBatch/annotations/train.json'
+            },
+        'first_batch_val_coco': {
+            'img_dir': 'firstBatch/images/default',
+            'ann_file': 'firstBatch/annotations/val.json'
+            }
         }
 
     @staticmethod

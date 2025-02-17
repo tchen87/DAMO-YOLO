@@ -20,8 +20,8 @@ miscs = easydict({
     'output_dir': './workdirs',    # save dir
     'exp_name': os.path.split(os.path.realpath(__file__))[1].split('.')[0],
     'seed': 1234,                  # rand seed for initialize
-    'eval_interval_epochs': 10,    # evaluation interval
-    'ckpt_interval_epochs': 10,    # ckpt saving interval
+    'eval_interval_epochs': 1,    # evaluation interval
+    'ckpt_interval_epochs': 1,    # ckpt saving interval
     'num_workers': 4,
 })
 
@@ -33,9 +33,9 @@ train = easydict({
     # scheduler
     'min_lr_ratio': 0.05,          # min lr ratio after closing augmentation
     'batch_size': 64,              # training batch size
-    'total_epochs': 300,           # training total epochs
-    'warmup_epochs': 5,            # warmup epochs
-    'no_aug_epochs': 16,           # training epochs after closing augmentation
+    'total_epochs': 100,           # training total epochs
+    'warmup_epochs': 1,            # warmup epochs
+    'no_aug_epochs': 1,           # training epochs after closing augmentation
     'resume_path': None,           # ckpt path for resuming training
     'finetune_path': None,         # ckpt path for finetuning
     'augment': train_aug,          # augmentation config for training
@@ -56,10 +56,10 @@ test = easydict({
 
 dataset = easydict({
     'paths_catalog': join(dirname(__file__), 'paths_catalog.py'),
-    'train_ann': ('coco_2017_train', ),
-    'val_ann': ('coco_2017_val', ),
+    'train_ann': ('first_batch_train_coco', ),
+    'val_ann': ('first_batch_val_coco', ),
     'data_dir': None,
-    'aspect_ratio_grouping': False,
+    'aspect_ratio_g:qrouping': False,
     'class_names': None,
 })
 
@@ -137,3 +137,4 @@ def parse_config(config_file):
     assert (config_file is not None), 'plz provide config file'
     if config_file is not None:
         return get_config_by_file(config_file)
+
