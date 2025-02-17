@@ -242,15 +242,35 @@ class Infer():
             output = self.model(image_np)
 
         bboxes, scores, cls_inds = self.postprocess(output, image, origin_shape=origin_shape)
+        logger.debug('origin shape {} ' , origin_shape)
 
         return bboxes, scores, cls_inds
 
     def visualize(self, image, bboxes, scores, cls_inds, conf, save_name='vis.jpg', save_result=True):
+        logger.debug('image shape {} ', image.shape)
+        # write out bounding boxes first
+        for i in range(len(bboxes)):
+            box = bboxes[i]
+            score = scores[i]
+            if score < conf:
+                continue
+            x0 = int(box[0])
+            y0 = int(box[1])
+            x1 = int(box[2])
+            y1 = int(box[3])
+            logger.debug("x0 = {} , x1 = {}, y0 = {}, y1 = {}", x0, x1, y0, y1)
+            bbox_name = "bbox" + str(i) + "_" + save_name
+            bbox_path = os.path.join(self.output_dir, bbox_name)
+            cv2.imwrite(bbox_path, image[y0:y1, x0:x1, ::-1])       
+
         vis_img = vis(image, bboxes, scores, cls_inds, conf, self.class_names)
         if save_result:
             save_path = os.path.join(self.output_dir, save_name)
             print(f"save visualization results at {save_path}")
             cv2.imwrite(save_path, vis_img[:, :, ::-1])
+
+
+            
         return vis_img
 
 
@@ -305,6 +325,40 @@ def make_parser():
 
     return parser
 
+def RunInferenceOnImage(imgpath):
+    infer_size =[640,640]
+    config = parse_config('./configs/damoyolo_tinynasL35_M.py')
+    input_type = 'image'
+    device = 'cuda'
+    conf = 0.6
+    output_dir = './demo'
+    engine = './epoch_96_ckpt.pth'
+    logger.debug('running on {}', imgpath)
+    infer_engine = Infer(config, infer_size, device, output_dir, engine, False)
+    origin_img = np.asarray(Image.open(imgpath).convert('RGB'))
+    img_copy = origin_img.copy()
+
+    bboxes, scores, cls_inds = infer_engine.forward(img_copy)
+    #vis_res = infer_engine.visualize(img_copy, bboxes, scores, cls_inds, conf, save_name=os.path.basename(imgpath), save_result=True)
+    
+    outputBBoxes = []
+    for i in range(len(bboxes)):
+        box = bboxes[i]
+        score = scores[i]
+        if score < conf:
+            continue    
+        x0 = int(box[0])
+        y0 = int(box[1])
+        x1 = int(box[2])
+        y1 = int(box[3])
+        logger.debug("x0 = {} , x1 = {}, y0 = {}, y1 = {}", x0, x1, y0, y1)
+        outputBBoxes.append([x0, y0, x1, y1])
+
+    return outputBBoxes
+
+def test():
+    logger.debug('this is a test')
+
 
 @logger.catch
 def main():
@@ -317,8 +371,11 @@ def main():
 
     if input_type == 'image':
         origin_img = np.asarray(Image.open(args.path).convert('RGB'))
-        bboxes, scores, cls_inds = infer_engine.forward(origin_img)
-        vis_res = infer_engine.visualize(origin_img, bboxes, scores, cls_inds, conf=args.conf, save_name=os.path.basename(args.path), save_result=args.save_result)
+        img_copy = origin_img.copy()
+        logger.debug(img_copy.shape)
+
+        bboxes, scores, cls_inds = infer_engine.forward(img_copy)
+        vis_res = infer_engine.visualize(img_copy, bboxes, scores, cls_inds, conf=args.conf, save_name=os.path.basename(args.path), save_result=args.save_result)
         if not args.save_result:
             cv2.namedWindow("DAMO-YOLO", cv2.WINDOW_NORMAL)
             cv2.imshow("DAMO-YOLO", vis_res)
