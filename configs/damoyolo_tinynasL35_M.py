@@ -14,13 +14,13 @@ class Config(MyConfig):
         self.miscs.eval_interval_epochs = 1
         self.miscs.ckpt_interval_epochs = 1
         # optimizer
-        self.train.batch_size = 32
+        self.train.batch_size = 1
         self.train.base_lr_per_img = 0.01 / 64
         self.train.min_lr_ratio = 0.05
         self.train.weight_decay = 5e-4
         self.train.momentum = 0.9
         self.train.no_aug_epochs = 16
-        self.train.warmup_epochs = 5
+        self.train.warmup_epochs = 1
         self.train.finetune_path='./damoyolo_tinynasL35_M_502.pth'
 
         # augment
@@ -31,8 +31,8 @@ class Config(MyConfig):
         self.train.augment.mosaic_mixup.shear = 2.0
         self.train.augment.mosaic_mixup.mosaic_scale = (0.1, 2.0)
 
-        self.dataset.train_ann = ('train_coco', )
-        self.dataset.val_ann = ('val_coco', )
+        self.dataset.train_ann = ('first_batch_train_coco', )
+        self.dataset.val_ann = ('first_batch_val_coco', )
 
         # backbone
         structure = self.read_structure(

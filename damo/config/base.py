@@ -32,7 +32,7 @@ train = easydict({
     'warmup_start_lr': 0,          # warmup start learning rate
     # scheduler
     'min_lr_ratio': 0.05,          # min lr ratio after closing augmentation
-    'batch_size': 64,              # training batch size
+    'batch_size': 1,              # training batch size
     'total_epochs': 100,           # training total epochs
     'warmup_epochs': 1,            # warmup epochs
     'no_aug_epochs': 1,           # training epochs after closing augmentation
@@ -51,7 +51,7 @@ train = easydict({
 
 test = easydict({
     'augment': test_aug,           # augmentation config for testing
-    'batch_size': 128,             # testing batch size
+    'batch_size': 1,             # testing batch size
 })
 
 dataset = easydict({
