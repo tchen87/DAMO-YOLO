@@ -1,0 +1,1 @@
+tools/converter.py --mode onnx -f configs/damoyolo_tinynasL35_M.py -c epoch_96_ckpt.pth --batch_size 1
