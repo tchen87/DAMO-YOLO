@@ -34,6 +34,14 @@ class DatasetCatalog(object):
         'first_batch_val_coco': {
             'img_dir': 'firstBatch/images/default',
             'ann_file': 'firstBatch/annotations/val.json'
+            },
+        'second_batch_train_coco': {
+            'img_dir': 'secondBatchAdded/images/default',
+            'ann_file': 'secondBatchAdded/annotations/train.json'
+            },
+        'second_batch_val_coco': {
+            'img_dir': 'secondBatchAdded/images/default',
+            'ann_file': 'secondBatchAdded/annotations/val.json'
             }
         }
 
