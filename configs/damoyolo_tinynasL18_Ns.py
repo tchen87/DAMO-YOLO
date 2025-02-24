@@ -11,14 +11,16 @@ class Config(MyConfig):
 
         self.miscs.exp_name = os.path.split(
             os.path.realpath(__file__))[1].split('.')[0]
-        self.miscs.eval_interval_epochs = 10
-        self.miscs.ckpt_interval_epochs = 10
+        self.miscs.eval_interval_epochs = 1
+        self.miscs.ckpt_interval_epochs = 1
         # optimizer
-        self.train.batch_size = 256
+        self.train.batch_size = 1
         self.train.base_lr_per_img = 0.001 / 64
         self.train.min_lr_ratio = 0.05
         self.train.no_aug_epochs = 16
-        self.train.warmup_epochs = 5
+        self.train.warmup_epochs = 1
+        self.train.finetune_path='./damoyolo_nano_small.pth'
+
 
         self.train.optimizer = {
             'name': "AdamW",
@@ -38,8 +40,8 @@ class Config(MyConfig):
         self.train.augment.mosaic_mixup.mosaic_scale = (0.75, 1.25)
         self.train.augment.mosaic_mixup.keep_ratio = False
 
-        self.dataset.train_ann = ('coco_2017_train', )
-        self.dataset.val_ann = ('coco_2017_val', )
+        self.dataset.train_ann = ('second_batch_train_coco', )
+        self.dataset.val_ann = ('second_batch_val_coco', )
 
         # backbone
         structure = self.read_structure(
@@ -74,7 +76,7 @@ class Config(MyConfig):
 
         ZeroHead = {
             'name': 'ZeroHead',
-            'num_classes': 80,
+            'num_classes': 1,
             'in_channels': [40, 80, 160],
             'stacked_convs': 0,
             'reg_max': 7,
@@ -86,4 +88,4 @@ class Config(MyConfig):
         }
         self.model.head = ZeroHead
 
-        self.dataset.class_names = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+        self.dataset.class_names = ['Head']
