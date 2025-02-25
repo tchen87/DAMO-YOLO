@@ -2,6 +2,8 @@ import random
 
 import torch
 import torch.nn as nn
+from loguru import logger
+
 
 
 class ORT_NMS(torch.autograd.Function):
@@ -13,6 +15,7 @@ class ORT_NMS(torch.autograd.Function):
                 max_output_boxes_per_class=torch.tensor([100]),
                 iou_threshold=torch.tensor([0.45]),
                 score_threshold=torch.tensor([0.25])):
+        logger.debug('ORT_NMS::forward')
         device = boxes.device
         batch = scores.shape[0]
         num_det = random.randint(0, 100)

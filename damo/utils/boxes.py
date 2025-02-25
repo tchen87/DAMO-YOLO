@@ -6,6 +6,7 @@
 import numpy as np
 import torch
 import torchvision
+from loguru import logger
 
 from damo.structures.bounding_box import BoxList
 
@@ -44,6 +45,7 @@ def multiclass_nms(multi_bboxes,
         tuple: (bboxes, labels), tensors of shape (k, 5) and (k, 1). Labels \
             are 0-based.
     """
+    logger.debug('multiclass_nms')
     num_classes = multi_scores.size(1)
     # exclude background category
     if multi_bboxes.shape[1] > 4:
@@ -116,6 +118,8 @@ def postprocess(cls_scores,
                 conf_thre=0.7,
                 nms_thre=0.45,
                 imgs=None):
+    logger.debug('postprocess')
+
     batch_size = bbox_preds.size(0)
     output = [None for _ in range(batch_size)]
     for i in range(batch_size):

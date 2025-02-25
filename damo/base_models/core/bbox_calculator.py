@@ -31,6 +31,7 @@ def batched_nms(boxes, scores, idxs, nms_cfg, class_agnostic=False):
     Returns:
         tuple: kept dets and indice.
     """
+    logger.debug('batched_nms')
     nms_cfg_ = nms_cfg.copy()
     class_agnostic = nms_cfg_.pop('class_agnostic', class_agnostic)
     if class_agnostic:
