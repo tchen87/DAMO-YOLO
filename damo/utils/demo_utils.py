@@ -4,7 +4,7 @@
 import os
 
 import numpy as np
-
+from loguru import logger
 from damo.dataset.transforms import transforms as T
 from damo.structures.image_list import to_image_list
 
@@ -20,6 +20,8 @@ def mkdir(path):
 
 def nms(boxes, scores, nms_thr):
     """Single class NMS implemented in Numpy."""
+    logger.debug('demo_utils::nms')
+
     x1 = boxes[:, 0]
     y1 = boxes[:, 1]
     x2 = boxes[:, 2]
@@ -50,6 +52,8 @@ def nms(boxes, scores, nms_thr):
 
 def multiclass_nms(boxes, scores, nms_thr, score_thr):
     """Multiclass NMS implemented in Numpy"""
+    logger.debug('demo_utils::multiclass_nms')
+
     final_dets = []
     num_classes = scores.shape[1]
     for cls_ind in range(num_classes):
@@ -72,6 +76,7 @@ def multiclass_nms(boxes, scores, nms_thr, score_thr):
 
 
 def demo_postprocess(outputs, img_size, p6=False):
+    logger.debug('demo_utils::demo_postprocess')
 
     grids = []
     expanded_strides = []
@@ -101,6 +106,8 @@ def demo_postprocess(outputs, img_size, p6=False):
 
 def transform_img(origin_img, size_divisibility, image_max_range, flip_prob,
                   image_mean, image_std, keep_ratio, infer_size=None):
+    logger.debug('demo_utils::transform_img')
+
     transform = [
         T.Resize(image_max_range, target_size=infer_size, keep_ratio=keep_ratio),
         T.RandomHorizontalFlip(flip_prob),

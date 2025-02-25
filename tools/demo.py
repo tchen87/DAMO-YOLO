@@ -218,6 +218,7 @@ class Infer():
                              self.config.model.head.nms_conf_thre,
                              self.config.model.head.nms_iou_thre, image)
 
+
         output = output[0].resize(origin_shape)
         bboxes = output.bbox
         scores = output.get_field('scores')
@@ -229,7 +230,10 @@ class Infer():
     def forward(self, origin_image):
 
         image, origin_shape = self.preprocess(origin_image)
+        logger.debug('preprocessed image : {} ', image)
 
+        numpy_array = np.array(image.tensors.cpu())
+        logger.debug('numpy array shape : {}', numpy_array.shape)
         if self.engine_type == 'torch':
             output = self.model(image)
 
@@ -240,6 +244,8 @@ class Infer():
         elif self.engine_type == 'tensorRT':
             image_np = np.asarray(image.tensors.cpu()).astype(np.float32)
             output = self.model(image_np)
+
+        logger.debug('before postprocess output : {} ', output)
 
         bboxes, scores, cls_inds = self.postprocess(output, image, origin_shape=origin_shape)
         logger.debug('origin shape {} ' , origin_shape)
