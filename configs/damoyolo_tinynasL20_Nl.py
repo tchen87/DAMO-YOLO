@@ -39,8 +39,9 @@ class Config(MyConfig):
         self.train.augment.mosaic_mixup.mosaic_scale = (0.1, 2.0)
         self.train.augment.mosaic_mixup.keep_ratio = False
 
-        self.dataset.train_ann = ('second_batch_train_coco', )
-        self.dataset.val_ann = ('second_batch_val_coco', )
+        self.dataset.train_ann = ('train_coco_03012025', )
+        self.dataset.val_ann = ('val_coco_03012025', )
+
 
         # backbone
         structure = self.read_structure(

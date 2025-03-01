@@ -7,26 +7,6 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = 'datasets'
     DATASETS = {
-        'coco_2017_train': {
-            'img_dir': 'coco/train2017',
-            'ann_file': 'coco/annotations/instances_train2017.json'
-        },
-        'coco_2017_val': {
-            'img_dir': 'coco/val2017',
-            'ann_file': 'coco/annotations/instances_val2017.json'
-        },
-        'coco_2017_test_dev': {
-            'img_dir': 'coco/test2017',
-            'ann_file': 'coco/annotations/image_info_test-dev2017.json'
-        },
-        'train_coco': {
-            'img_dir': 'data_coco_DATASET/images/Train',
-            'ann_file': 'data_coco_DATASET/annotations/train.json'
-        },
-        'val_coco': {
-            'img_dir': 'data_coco_DATASET/images/Train',
-            'ann_file': 'data_coco_DATASET/annotations/val.json'
-        },
         'first_batch_train_coco': {
             'img_dir': 'firstBatch/images/default',
             'ann_file': 'firstBatch/annotations/train.json'
@@ -42,7 +22,15 @@ class DatasetCatalog(object):
         'second_batch_val_coco': {
             'img_dir': 'secondBatchAdded/images/default',
             'ann_file': 'secondBatchAdded/annotations/val.json'
-            }
+            },
+        'train_coco_03012025': {
+            'img_dir': 'fullDataset03012025/images/default',
+            'ann_file': 'fullDataset03012025/annotations/train.json'
+            },
+        'val_coco_03012025': {
+            'img_dir': 'fullDataset03012025/images/default',
+            'ann_file': 'fullDataset03012025/annotations/val.json'
+            }    
         }
 
     @staticmethod

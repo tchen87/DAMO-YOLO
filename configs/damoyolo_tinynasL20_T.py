@@ -30,8 +30,9 @@ class Config(MyConfig):
         self.train.augment.mosaic_mixup.shear = 0.2
         self.train.augment.mosaic_mixup.mosaic_scale = (0.1, 2.0)
 
-        self.dataset.train_ann = ('second_batch_train_coco', )
-        self.dataset.val_ann = ('second_batch_val_coco', )
+        self.dataset.train_ann = ('train_coco_03012025', )
+        self.dataset.val_ann = ('val_coco_03012025', )
+
 
         # backbone
         structure = self.read_structure(
@@ -63,7 +64,7 @@ class Config(MyConfig):
 
         ZeroHead = {
             'name': 'ZeroHead',
-            'num_classes': 3,
+            'num_classes': 1,
             'in_channels': [64, 128, 256],
             'stacked_convs': 0,
             'reg_max': 16,
@@ -74,4 +75,4 @@ class Config(MyConfig):
         }
         self.model.head = ZeroHead
 
-        self.dataset.class_names = [ 'Head', 'Right eye', 'Left eye']
+        self.dataset.class_names = [ 'Head']
