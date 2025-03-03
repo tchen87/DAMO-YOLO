@@ -2,6 +2,7 @@
 from __future__ import division
 
 import torch
+from loguru import logger
 
 
 class ImageList(object):
@@ -45,6 +46,8 @@ def to_image_list(tensors, size_divisible=0, max_size=None):
             tensors = tensors[None]
         assert tensors.dim() == 4
         image_sizes = [tensor.shape[-2:] for tensor in tensors]
+        logger.debug('tensors.shape {}', tensors.shape)
+
         return ImageList(tensors, image_sizes, image_sizes)
     elif isinstance(tensors, (tuple, list)):
         if max_size is None:

@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
+from loguru import logger
 
 # transpose
 FLIP_LEFT_RIGHT = 0
@@ -130,7 +131,7 @@ class BoxList(object):
         if method not in (FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM):
             raise NotImplementedError(
                 'Only FLIP_LEFT_RIGHT and FLIP_TOP_BOTTOM implemented')
-
+        logger.debug('transposed!')
         image_width, image_height = self.size
         xmin, ymin, xmax, ymax = self._split_into_xyxy()
         if method == FLIP_LEFT_RIGHT:

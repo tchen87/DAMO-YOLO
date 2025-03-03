@@ -117,5 +117,6 @@ def transform_img(origin_img, size_divisibility, image_max_range, flip_prob,
     transform = T.Compose(transform)
 
     img, _ = transform(origin_img)
+    logger.debug('transformed img {}', img)
     img = to_image_list(img, size_divisibility)
     return img

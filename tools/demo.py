@@ -55,6 +55,7 @@ class Infer():
 
     def _pad_image(self, img, target_size):
         n, c, h, w = img.shape
+        logger.debug('h {}, w {}, target_size {}', h, w, target_size)
         assert n == 1
         assert h<=target_size[0] and w<=target_size[1]
         target_size = [n, c, target_size[0], target_size[1]]
