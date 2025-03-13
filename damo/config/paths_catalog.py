@@ -30,6 +30,14 @@ class DatasetCatalog(object):
         'val_coco_03012025': {
             'img_dir': 'fullDataset03012025/images/default',
             'ann_file': 'fullDataset03012025/annotations/val.json'
+            },
+        'train_coco_03132025': {
+            'img_dir': 'updatedLabels_03132025/images/default',
+            'ann_file': 'updatedLabels_03132025/annotations/train.json'
+            },
+        'val_coco_03132025': {
+            'img_dir': 'updatedLabels_03132025/images/default',
+            'ann_file': 'updatedLabels_03132025/annotations/val.json'
             }    
         }
 
