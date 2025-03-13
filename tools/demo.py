@@ -6,6 +6,7 @@ import os
 import cv2
 import numpy as np
 import torch
+import json
 from loguru import logger
 from PIL import Image
 
@@ -256,6 +257,8 @@ class Infer():
     def visualize(self, image, bboxes, scores, cls_inds, conf, save_name='vis.jpg', save_result=True):
         logger.debug('image shape {} ', image.shape)
         # write out bounding boxes first
+        output_json = []
+        
         for i in range(len(bboxes)):
             box = bboxes[i]
             score = scores[i]
@@ -268,6 +271,8 @@ class Infer():
             logger.debug("x0 = {} , x1 = {}, y0 = {}, y1 = {}", x0, x1, y0, y1)
             bbox_name = "bbox" + str(i) + "_" + save_name
             bbox_path = os.path.join(self.output_dir, bbox_name)
+            bbox_json = {"x0": x0, "y0": y0, "x1": x1, "y1": y1}
+            output_json.append(bbox_json)
             cv2.imwrite(bbox_path, image[y0:y1, x0:x1, ::-1])       
 
         vis_img = vis(image, bboxes, scores, cls_inds, conf, self.class_names)
@@ -275,7 +280,11 @@ class Infer():
             save_path = os.path.join(self.output_dir, save_name)
             print(f"save visualization results at {save_path}")
             cv2.imwrite(save_path, vis_img[:, :, ::-1])
-
+            [filename, ext]= os.path.splitext(save_name)
+            json_filename = filename + ".txt"
+            json_path = os.path.join(self.output_dir, json_filename)
+            with open(json_path , "w") as file:
+                json.dump(output_json, file, indent=4)
 
             
         return vis_img
@@ -334,19 +343,19 @@ def make_parser():
 
 def RunInferenceOnImage(imgpath):
     infer_size =[640,640]
-    config = parse_config('./configs/damoyolo_tinynasL35_M.py')
+    config = parse_config('./configs/damoyolo_tinynasL20_T.py')
     input_type = 'image'
     device = 'cuda'
     conf = 0.6
     output_dir = './demo'
-    engine = './epoch_96_ckpt.pth'
+    engine = './damoyolo_tinynasL20_T_v3.pth'
     logger.debug('running on {}', imgpath)
     infer_engine = Infer(config, infer_size, device, output_dir, engine, False)
     origin_img = np.asarray(Image.open(imgpath).convert('RGB'))
     img_copy = origin_img.copy()
 
     bboxes, scores, cls_inds = infer_engine.forward(img_copy)
-    #vis_res = infer_engine.visualize(img_copy, bboxes, scores, cls_inds, conf, save_name=os.path.basename(imgpath), save_result=True)
+    vis_res = infer_engine.visualize(img_copy, bboxes, scores, cls_inds, conf, save_name=os.path.basename(imgpath), save_result=True)
     
     outputBBoxes = []
     for i in range(len(bboxes)):
