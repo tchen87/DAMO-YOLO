@@ -25,7 +25,7 @@ class Config(MyConfig):
 
 
         # augment
-        self.train.augment.transform.image_max_range = (224, 224)
+        self.train.augment.transform.image_max_range = (320, 320)
         self.train.augment.mosaic_mixup.mixup_prob = 0.15
         self.train.augment.mosaic_mixup.degrees = 10.0
         self.train.augment.mosaic_mixup.translate = 0.2

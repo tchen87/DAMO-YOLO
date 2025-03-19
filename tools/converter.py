@@ -52,7 +52,7 @@ def make_parser():
                         help='inference image batch nums')
     parser.add_argument('--img_size',
                         type=int,
-                        default='224',
+                        default='320',
                         help='inference image shape')
     # onnx part
     parser.add_argument('--input',
