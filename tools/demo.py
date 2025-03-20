@@ -273,7 +273,7 @@ class Infer():
             bbox_path = os.path.join(self.output_dir, bbox_name)
             bbox_json = {"x0": x0, "y0": y0, "x1": x1, "y1": y1}
             output_json.append(bbox_json)
-            cv2.imwrite(bbox_path, image[y0:y1, x0:x1, ::-1])       
+            #cv2.imwrite(bbox_path, image[y0:y1, x0:x1, ::-1])       
 
         vis_img = vis(image, bboxes, scores, cls_inds, conf, self.class_names)
         if save_result:
@@ -342,13 +342,13 @@ def make_parser():
     return parser
 
 def RunInferenceOnImage(imgpath):
-    infer_size =[640,640]
+    infer_size =[320,320]
     config = parse_config('./configs/damoyolo_tinynasL20_T.py')
     input_type = 'image'
     device = 'cuda'
     conf = 0.6
     output_dir = './demo'
-    engine = './damoyolo_tinynasL20_T_v3.pth'
+    engine = './models_03202025_320x320/damoyolo_tinynasL20_T.pth'
     logger.debug('running on {}', imgpath)
     infer_engine = Infer(config, infer_size, device, output_dir, engine, False)
     origin_img = np.asarray(Image.open(imgpath).convert('RGB'))

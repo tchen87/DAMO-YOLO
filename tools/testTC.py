@@ -16,14 +16,14 @@ def list_files_in_directory(directory_path):
 
 def main():
     #test()
-    files = list_files_in_directory('datasets/training_data_03112025/')
+    files = list_files_in_directory('datasets/training_data_03202025/')
     for file in files:
         logger.debug('file = {}', file)
         outputBBoxes = RunInferenceOnImage(file)
         logger.debug(outputBBoxes)
         logger.debug('file = {}', file)
         # break
-        LandmarkDetection(file, outputBBoxes)
+      #  LandmarkDetection(file, outputBBoxes)
 
 
 

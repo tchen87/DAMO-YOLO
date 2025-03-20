@@ -47,8 +47,6 @@ def multiclass_nms(multi_bboxes,
     """
     logger.debug('multiclass_nms')
     num_classes = multi_scores.size(1)
-    logger.debug('num_classes: {}' , num_classes)
-    logger.debug('multi_bboxes.shape[1] : {}', multi_bboxes.shape[1] )
     # exclude background category
     if multi_bboxes.shape[1] > 4:
         bboxes = multi_bboxes.view(multi_scores.size(0), -1, 4)
