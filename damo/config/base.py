@@ -56,8 +56,8 @@ test = easydict({
 
 dataset = easydict({
     'paths_catalog': join(dirname(__file__), 'paths_catalog.py'),
-    'train_ann': ('train_coco_03132025', ),
-    'val_ann': ('val_coco_03132025', ),
+    'train_ann': ('train_coco_03282025', ),
+    'val_ann': ('val_coco_03282025', ),
     'data_dir': None,
     'aspect_ratio_g:qrouping': False,
     'class_names': None,
