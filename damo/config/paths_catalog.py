@@ -7,38 +7,6 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = 'datasets'
     DATASETS = {
-        'first_batch_train_coco': {
-            'img_dir': 'firstBatch/images/default',
-            'ann_file': 'firstBatch/annotations/train.json'
-            },
-        'first_batch_val_coco': {
-            'img_dir': 'firstBatch/images/default',
-            'ann_file': 'firstBatch/annotations/val.json'
-            },
-        'second_batch_train_coco': {
-            'img_dir': 'secondBatchAdded/images/default',
-            'ann_file': 'secondBatchAdded/annotations/train.json'
-            },
-        'second_batch_val_coco': {
-            'img_dir': 'secondBatchAdded/images/default',
-            'ann_file': 'secondBatchAdded/annotations/val.json'
-            },
-        'train_coco_03012025': {
-            'img_dir': 'fullDataset03012025/images/default',
-            'ann_file': 'fullDataset03012025/annotations/train.json'
-            },
-        'val_coco_03012025': {
-            'img_dir': 'fullDataset03012025/images/default',
-            'ann_file': 'fullDataset03012025/annotations/val.json'
-            },
-        'train_coco_03132025': {
-            'img_dir': 'updatedLabels_03132025/images/default',
-            'ann_file': 'updatedLabels_03132025/annotations/train.json'
-            },
-        'val_coco_03132025': {
-            'img_dir': 'updatedLabels_03132025/images/default',
-            'ann_file': 'updatedLabels_03132025/annotations/val.json'
-            },   
         'train_coco_03282025': {
             'img_dir': 'training_03282025/images/default',
             'ann_file': 'training_03282025/annotations/train.json'
@@ -46,7 +14,16 @@ class DatasetCatalog(object):
         'val_coco_03282025': {
             'img_dir': 'training_03282025/images/default',
             'ann_file': 'training_03282025/annotations/val.json'
+            },
+        'train_coco_04032025': {
+            'img_dir': 'training_04032025/images/default',
+            'ann_file': 'training_04032025/annotations/train.json'
+            },
+        'val_coco_04032025': {
+            'img_dir': 'training_04032025/images/default',
+            'ann_file': 'training_04032025/annotations/val.json'
             } 
+    
         }
 
     @staticmethod
