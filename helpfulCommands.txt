@@ -2,3 +2,4 @@ tools/converter.py --mode onnx -f configs/damoyolo_tinynasL35_M.py -c epoch_96_c
 
 python tools/demo.py image -f configs/damoyolo_tinynasL35_M.py --engine firstBatch_L35_M_model.pth --conf 0.6 --infer_size 640 640 --device cuda --path datasets/secondBatchAdded/images/default/clip_2025-01-28.08-27-09.png_Infrared\ 1_1738074430015.91650390625000.png
 
+python cocosplit/cocosplit.py --having-annotations  -s 0.8 instances_default.json train.json val.json
