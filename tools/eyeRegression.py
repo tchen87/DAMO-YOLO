@@ -15,6 +15,7 @@ from torchvision.transforms import functional as F
 import os
 
 import json
+import onnxruntime as ort
 
 def ParseCVATXMLFile(filename, images_dir, output_dir) :
     
@@ -103,8 +104,14 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx):
         image = cv2.imread(self.image_paths[idx])
         image = cv2.resize(image, (224, 224))
-        image = F.to_tensor(image)
-        image = F.normalize(image, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        
+        transform3 = transforms.Compose([transforms.ToTensor()])
+        transform4= transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        image = transform3(image)
+        image = transform4(image)
+        
+        #image = F.to_tensor(image)
+        #image = F.normalize(image, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         target = torch.tensor(self.targets[idx], dtype=torch.float32)
         return image, target
 
@@ -201,7 +208,44 @@ def trainModel() :
                       input_names=["input"], output_names=["output"], 
                       opset_version=11)
 
-def testModelOnImage() :
+def Preprocess(image) :
+    image = cv2.resize(image, (224, 224))
+    transform3 = transforms.Compose([transforms.ToTensor()])
+    transform4= transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+    image = transform3(image)
+    image = transform4(image)
+    return image
+
+def testModelOnImage(image_path) :
+    image = cv2.imread(image_path)
+    input_tensor = Preprocess(image)
+    input_tensor = input_tensor.reshape(1, 3, 224, 224)
+        # Run inference
+    ort_session = ort.InferenceSession("resnet18_regression.onnx")
+    input_np = input_tensor.cpu().numpy()
+    logger.debug(input_np.shape)
+
+    onnx_output = ort_session.run(None, {"input": input_np})
+    logger.debug(onnx_output[0][0])
+    rx = onnx_output[0][0][0]
+    ry = onnx_output[0][0][1]
+    lx = onnx_output[0][0][2]
+    ly = onnx_output[0][0][3]
+    
+    lx = int(lx * image.shape[1])
+    ly = int(ly * image.shape[0])
+    rx = int(rx * image.shape[1])
+    ry = int(ry * image.shape[0])
+    logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
+
+    cv2.circle(image, (lx, ly), 1, (0, 0, 255))
+    cv2.circle(image, (rx, ry), 1, (0, 255, 0))
+    
+    cv2.imshow('Circles', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def testing() :
     image_path = "test.png"
     image = cv2.imread(image_path)
     json_path = "test.json"
@@ -225,7 +269,7 @@ def testModelOnImage() :
     ry = int(ry * image.shape[0])
     logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
 
-    cv2.circle(image, (lx, ly), 1, (255, 0, 0))
+    cv2.circle(image, (lx, ly), 1, (0, 0, 255))
     cv2.circle(image, (rx, ry), 1, (0, 255, 0))
     
     cv2.imshow('Circles', image)
@@ -235,7 +279,7 @@ def testModelOnImage() :
 def main():
     #ParseCVATXMLFile("datasets/images_cvat/annotations.xml", "datasets/images_cvat/images/default", "outputs")
    # trainModel()
-   testModelOnImage()
+   testModelOnImage("test.png")
 
 if __name__ == '__main__':
     main()
