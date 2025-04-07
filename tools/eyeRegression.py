@@ -102,7 +102,6 @@ class CustomDataset(Dataset):
     
     def __getitem__(self, idx):
         image = cv2.imread(self.image_paths[idx])
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = cv2.resize(image, (224, 224))
         image = F.to_tensor(image)
         image = F.normalize(image, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -123,9 +122,7 @@ def list_png_files(folder_path):
     png_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
     return png_files
 
-def main():
-    #ParseCVATXMLFile("datasets/images_cvat/annotations.xml", "datasets/images_cvat/images/default", "outputs")
-    
+def trainModel() :
     pngs = list_png_files("outputs")
     logger.debug("pngs = {}", pngs)
     image_paths = []
@@ -204,6 +201,41 @@ def main():
                       input_names=["input"], output_names=["output"], 
                       opset_version=11)
 
+def testModelOnImage() :
+    image_path = "test.png"
+    image = cv2.imread(image_path)
+    json_path = "test.json"
+    with open(json_path, "r") as file:
+        jsonstuff = json.load(file)
+    logger.debug(jsonstuff)
+    points = jsonstuff['points']
+    for point in points :
+        if point['label'] == "Left eye" :
+            lx = point['x']
+            ly = point['y']
+        elif point['label'] == "Right eye" :
+            rx = point['x']
+            ry = point['y']
+            
+    logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
+    logger.debug(image.shape)
+    lx = int(lx * image.shape[1])
+    ly = int(ly * image.shape[0])
+    rx = int(rx * image.shape[1])
+    ry = int(ry * image.shape[0])
+    logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
+
+    cv2.circle(image, (lx, ly), 1, (255, 0, 0))
+    cv2.circle(image, (rx, ry), 1, (0, 255, 0))
+    
+    cv2.imshow('Circles', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def main():
+    #ParseCVATXMLFile("datasets/images_cvat/annotations.xml", "datasets/images_cvat/images/default", "outputs")
+   # trainModel()
+   testModelOnImage()
 
 if __name__ == '__main__':
     main()
