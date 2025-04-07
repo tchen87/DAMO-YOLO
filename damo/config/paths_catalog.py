@@ -22,8 +22,16 @@ class DatasetCatalog(object):
         'val_coco_04032025': {
             'img_dir': 'training_04032025/images/default',
             'ann_file': 'training_04032025/annotations/val.json'
+            },
+        'train_coco_04072025': {
+            'img_dir': 'training_04072025/images/default',
+            'ann_file': 'training_04072025/annotations/train.json'
+            },
+        'val_coco_04072025': {
+            'img_dir': 'training_04072025/images/default',
+            'ann_file': 'training_04072025/annotations/val.json'
             } 
-    
+  
         }
 
     @staticmethod
