@@ -125,12 +125,18 @@ class ResNet18Regression(nn.Module):
     def forward(self, x):
         return self.resnet(x)
 
-def list_png_files(folder_path):
-    png_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
-    return png_files
+def list_png_files_in_directory(directory_path):
+    files = []
+    # List all files in the directory as strings
+    for f in os.listdir(directory_path) :
+        file = os.path.join(directory_path, f)
+        if os.path.isfile(file) and file.endswith(".png") :
+            files.append(file)
+
+    return files
 
 def trainModel() :
-    pngs = list_png_files("outputs")
+    pngs = list_png_files_in_directory("testInputs")
     logger.debug("pngs = {}", pngs)
     image_paths = []
     for imagename in pngs :
@@ -238,48 +244,47 @@ def testModelOnImage(image_path) :
     ry = int(ry * image.shape[0])
     logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
 
-    cv2.circle(image, (lx, ly), 1, (0, 0, 255))
+    cv2.circle(image, (lx, ly), 1, (0, 255, 0))
     cv2.circle(image, (rx, ry), 1, (0, 255, 0))
-    
-    cv2.imshow('Circles', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
-def testing() :
-    image_path = "test.png"
-    image = cv2.imread(image_path)
-    json_path = "test.json"
-    with open(json_path, "r") as file:
+    #write out labeled eye positiosn
+    [justfilename, ext] = os.path.splitext(image_path)
+    jsonfilename = justfilename + ".json"
+
+    with open(jsonfilename, "r") as file:
         jsonstuff = json.load(file)
     logger.debug(jsonstuff)
     points = jsonstuff['points']
     for point in points :
         if point['label'] == "Left eye" :
-            lx = point['x']
-            ly = point['y']
+            lx2 = point['x']
+            ly2 = point['y']
         elif point['label'] == "Right eye" :
-            rx = point['x']
-            ry = point['y']
+            rx2 = point['x']
+            ry2 = point['y']
             
-    logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
-    logger.debug(image.shape)
-    lx = int(lx * image.shape[1])
-    ly = int(ly * image.shape[0])
-    rx = int(rx * image.shape[1])
-    ry = int(ry * image.shape[0])
-    logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
-
-    cv2.circle(image, (lx, ly), 1, (0, 0, 255))
-    cv2.circle(image, (rx, ry), 1, (0, 255, 0))
+    lx2 = int(lx2 * image.shape[1])
+    ly2 = int(ly2 * image.shape[0])
+    rx2 = int(rx2 * image.shape[1])
+    ry2 = int(ry2 * image.shape[0])
+    cv2.circle(image, (lx2, ly2), 1, (0, 0, 255))
+    cv2.circle(image, (rx2, ry2), 1, (0, 0, 255))
     
-    cv2.imshow('Circles', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+   
+    output_filename = os.path.basename(image_path)
+    output_filename = "outputs/" + output_filename 
+    cv2.imwrite(output_filename, image)
+    # cv2.imshow('Circles', image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
 
 def main():
     #ParseCVATXMLFile("datasets/images_cvat/annotations.xml", "datasets/images_cvat/images/default", "outputs")
    # trainModel()
-   testModelOnImage("test.png")
+    pngfiles = list_png_files_in_directory("testInputs")
+    for png in pngfiles:
+        testModelOnImage(png)
 
 if __name__ == '__main__':
     main()
