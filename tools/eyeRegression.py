@@ -17,6 +17,10 @@ import os
 import json
 import onnxruntime as ort
 
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
+
 def ParseCVATXMLFile(filename, images_dir, output_dir) :
     
     tree = ET.parse(filename)
@@ -95,7 +99,7 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
 class CustomDataset(Dataset):
     def __init__(self, image_paths, targets, transform=None):
         self.image_paths = image_paths
-        self.targets = targets
+        self.targets = targets  # Shape: (N, 4) for 2 points (x1, y1, x2, y2)
         self.transform = transform
     
     def __len__(self):
@@ -104,15 +108,26 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx):
         image = cv2.imread(self.image_paths[idx])
         image = cv2.resize(image, (224, 224))
-        
-        transform3 = transforms.Compose([transforms.ToTensor()])
-        transform4= transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-        image = transform3(image)
-        image = transform4(image)
-        
-        #image = F.to_tensor(image)
-        #image = F.normalize(image, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        target = torch.tensor(self.targets[idx], dtype=torch.float32)
+        target = self.targets[idx]
+        keypoints = [(target[0], target[1]), (target[2], target[3])]
+
+        if self.transform:
+            augmented = self.transform(image=image, keypoints=[(target[0], target[1]), (target[2], target[3])])
+            image = augmented['image']
+            keypoints = augmented['keypoints']
+            if len(keypoints) != 2:
+                # Return a dummy tensor with zeros if keypoints are lost
+                #logger.debug("lost keypoints!")
+                target = torch.zeros(4, dtype=torch.float32)
+            else:
+                target = torch.tensor([kp[0] for kp in keypoints] + [kp[1] for kp in keypoints], dtype=torch.float32)        
+        else:
+            transform3 = transforms.Compose([transforms.ToTensor()])
+            transform4= transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+            image = transform3(image)
+            image = transform4(image)
+            target = torch.tensor(target, dtype=torch.float32)
+
         return image, target
 
 # Define the model
@@ -137,10 +152,9 @@ def list_png_files_in_directory(directory_path):
 
 def trainModel() :
     pngs = list_png_files_in_directory("testInputs")
-    logger.debug("pngs = {}", pngs)
     image_paths = []
     for imagename in pngs :
-        image_paths.append(os.path.join("outputs" ,imagename))
+        image_paths.append(imagename)
 
     all_points = []  # List to store all points
 
@@ -154,7 +168,7 @@ def trainModel() :
         # Extract x, y coordinates
         # should only be 2 points per json file
 
-        if points[0]["label"] == "Right Eye" :
+        if points[0]["label"] == "Right eye" :
             righteyex = points[0]["x"]
             righteyey = points[0]["y"]
             lefteyex = points[1]["x"]
@@ -170,7 +184,7 @@ def trainModel() :
 
     # Convert list of points to a NumPy array
     points_array = np.array(all_points, dtype=np.float32)
-
+    logger.debug(points_array)
     # Convert to PyTorch tensor
     target_tensor = torch.tensor(points_array)
 
@@ -179,10 +193,23 @@ def trainModel() :
     epochs = 100
     learning_rate = 0.001
 
+
+    # Define Albumentations transforms
+    transform = A.Compose([
+        A.Resize(224, 224),
+        A.HorizontalFlip(p=0.5),
+        A.RandomBrightnessContrast(p=0.2),
+        A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
+        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ToTensorV2(),
+    ], keypoint_params=A.KeypointParams(format='xy'))
+
     # Dummy data
     targets =points_array
 
-    dataset = CustomDataset(image_paths, targets)
+    #dataset = CustomDataset(image_paths, targets)
+    dataset = CustomDataset(image_paths, targets, transform=transform)
+
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     # Initialize model, loss, and optimizer
