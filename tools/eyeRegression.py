@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.models as models
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, random_split
 import numpy as np
 import cv2
 from torchvision.transforms import functional as F
@@ -150,12 +150,7 @@ def list_png_files_in_directory(directory_path):
 
     return files
 
-def trainModel() :
-    pngs = list_png_files_in_directory("testInputs")
-    image_paths = []
-    for imagename in pngs :
-        image_paths.append(imagename)
-
+def LoadPointsForImages(image_paths) :
     all_points = []  # List to store all points
 
     for imagename in image_paths :
@@ -181,17 +176,35 @@ def trainModel() :
             
         # Store them as a tuple (x, y)
         all_points.append((righteyex, righteyey, lefteyex, lefteyey))
+    return all_points
 
+
+def trainModel() :
+    pngs = list_png_files_in_directory("cropped")
+    image_paths = []
+    for imagename in pngs :
+        image_paths.append(imagename)
+
+    val_split = 0.2
+    val_size = int(len(image_paths) * val_split)
+    train_size = len(image_paths) - val_size
+    train_dataset, val_dataset = random_split(image_paths, [train_size, val_size])
+    
+    train_points = LoadPointsForImages(train_dataset)
+    
     # Convert list of points to a NumPy array
-    points_array = np.array(all_points, dtype=np.float32)
-    logger.debug(points_array)
-    # Convert to PyTorch tensor
-    target_tensor = torch.tensor(points_array)
+    train_points_array = np.array(train_points, dtype=np.float32)
 
-    # Hyperparameters
-    batch_size = 32
-    epochs = 100
-    learning_rate = 0.001
+    # Dummy data
+    train_targets =train_points_array
+
+    val_points = LoadPointsForImages(val_dataset)
+    
+    # Convert list of points to a NumPy array
+    val_points_array = np.array(val_points, dtype=np.float32)
+
+    # Dummy data
+    val_targets =val_points_array
 
 
     # Define Albumentations transforms
@@ -203,14 +216,18 @@ def trainModel() :
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2(),
     ], keypoint_params=A.KeypointParams(format='xy'))
+    
+    train_dataset = CustomDataset(train_dataset, train_targets)
+    val_dataset = CustomDataset(val_dataset, val_targets)
+    #dataset = CustomDataset(image_paths, targets, transform=transform)
 
-    # Dummy data
-    targets =points_array
+    # Hyperparameters
+    batch_size = 32
+    epochs = 100
+    learning_rate = 0.001
 
-    #dataset = CustomDataset(image_paths, targets)
-    dataset = CustomDataset(image_paths, targets, transform=transform)
-
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
 
     # Initialize model, loss, and optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -222,7 +239,7 @@ def trainModel() :
     for epoch in range(epochs):
         model.train()
         running_loss = 0.0
-        for images, targets in dataloader:
+        for images, targets in train_dataloader:
             images, targets = images.to(device), targets.to(device)
         
             optimizer.zero_grad()
@@ -233,13 +250,27 @@ def trainModel() :
         
             running_loss += loss.item()
     
-        print(f"Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(dataloader):.4f}")
+        print(f"Training Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_dataloader):.8f}")
 
-    # Export model to ONNX
-    dummy_input = torch.randn(1, 3, 224, 224).to(device)
-    torch.onnx.export(model, dummy_input, "resnet18_regression.onnx", 
-                      input_names=["input"], output_names=["output"], 
-                      opset_version=11)
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for images, targets in val_dataloader:
+                images, targets = images.to(device), targets.to(device)
+                outputs = model(images)
+                loss = criterion(outputs, targets)
+                val_loss += loss.item()
+    
+        print(f"Validation Epoch [{epoch+1}/{epochs}], Loss: {val_loss/len(val_dataset):.8f}")
+
+        # Export model to ONNX
+        dummy_input = torch.randn(1, 3, 224, 224).to(device)
+        model_name = "resnet18_regression_ckpt" + str(epoch + 1)+ ".onnx"
+        torch.onnx.export(model, dummy_input, model_name, 
+                          input_names=["input"], output_names=["output"], 
+                          opset_version=11)
+
+
 
 def Preprocess(image) :
     image = cv2.resize(image, (224, 224))
