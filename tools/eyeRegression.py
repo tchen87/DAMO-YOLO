@@ -1,3 +1,4 @@
+from re import X
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
@@ -19,6 +20,7 @@ import onnxruntime as ort
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from symbol import factor
 
 
 def ParseCVATXMLFile(filename, images_dir, output_dir) :
@@ -52,6 +54,24 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
             ytl = float(box.attrib["ytl"])
             xbr = float(box.attrib["xbr"])
             ybr = float(box.attrib["ybr"])
+
+            factor = 0.2
+            box_height = ybr - ytl
+            box_width = xbr - xtl
+
+            xtl = xtl - box_width * factor
+            ytl = ytl - box_height * factor
+            xbr = xbr + box_width * factor
+            ybr = ybr + box_height * factor
+
+            if xtl < 0 :
+                xtl = 0
+            if xbr > width :
+                xbr = width
+            if ytl < 0 :
+                ytl = 0
+            if ybr > height : 
+                ybr = height
 
             # Crop the image using OpenCV
             cropped = img[int(ytl):int(ybr), int(xtl):int(xbr)]
@@ -285,7 +305,7 @@ def testModelOnImage(image_path) :
     input_tensor = Preprocess(image)
     input_tensor = input_tensor.reshape(1, 3, 224, 224)
         # Run inference
-    ort_session = ort.InferenceSession("resnet18_regression.onnx")
+    ort_session = ort.InferenceSession("resnet18_regression_noalbum.onnx")
     input_np = input_tensor.cpu().numpy()
     logger.debug(input_np.shape)
 
@@ -330,7 +350,7 @@ def testModelOnImage(image_path) :
     
    
     output_filename = os.path.basename(image_path)
-    output_filename = "outputs/" + output_filename 
+    output_filename = "outputs_noalbum/" + output_filename 
     cv2.imwrite(output_filename, image)
     # cv2.imshow('Circles', image)
     # cv2.waitKey(0)
@@ -338,11 +358,11 @@ def testModelOnImage(image_path) :
 
 
 def main():
-    #ParseCVATXMLFile("datasets/images_cvat/annotations.xml", "datasets/images_cvat/images/default", "outputs")
-   # trainModel()
-    pngfiles = list_png_files_in_directory("testInputs")
-    for png in pngfiles:
-        testModelOnImage(png)
+    ParseCVATXMLFile("datasets/images_cvat_04092025/annotations.xml", "datasets/images_cvat_04092025/images/default", "expanded20percent")
+    #trainModel()
+    # pngfiles = list_png_files_in_directory("cropped")
+    # for png in pngfiles:
+    #     testModelOnImage(png)
 
 if __name__ == '__main__':
     main()
