@@ -117,10 +117,10 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
 
 # Define a custom dataset class
 class CustomDataset(Dataset):
-    def __init__(self, image_paths, targets, transform=None):
+    def __init__(self, image_paths, targets, doTransform=False):
         self.image_paths = image_paths
         self.targets = targets  # Shape: (N, 4) for 2 points (x1, y1, x2, y2)
-        self.transform = transform
+        self.doTransform = doTransform
     
     def __len__(self):
         return len(self.image_paths)
@@ -130,17 +130,44 @@ class CustomDataset(Dataset):
         image = cv2.resize(image, (224, 224))
         target = self.targets[idx]
         keypoints = [(target[0], target[1]), (target[2], target[3])]
+       # logger.debug(keypoints)
 
-        if self.transform:
-            augmented = self.transform(image=image, keypoints=[(target[0], target[1]), (target[2], target[3])])
+        if self.doTransform:
+                # Define Albumentations transforms
+            transform = A.Compose([
+                A.RandomBrightnessContrast(p=0.2),
+                A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
+            ], keypoint_params=A.KeypointParams(format='xy'))
+
+            keypoints_pixels = [(int(target[0] * 224), int(target[1] * 224)), (int(target[2] * 224), int(target[3] * 224))]
+
+            augmented = transform(image=image, keypoints=keypoints_pixels)
             image = augmented['image']
+            writable = image.copy()
+            
             keypoints = augmented['keypoints']
+            
+            
+            transform3 = transforms.Compose([transforms.ToTensor()])
+            transform4= transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+            image = transform3(image)
+            image = transform4(image)
             if len(keypoints) != 2:
                 # Return a dummy tensor with zeros if keypoints are lost
-                #logger.debug("lost keypoints!")
+                logger.debug("lost keypoints!")
                 target = torch.zeros(4, dtype=torch.float32)
             else:
-                target = torch.tensor([kp[0] for kp in keypoints] + [kp[1] for kp in keypoints], dtype=torch.float32)        
+                lx = int(keypoints[1][0])
+                ly = int(keypoints[1][1])
+                rx = int(keypoints[0][0])
+                ry = int(keypoints[0][1])
+            
+                # cv2.circle(writable, (lx, ly), 1, (0, 0, 255))
+                # cv2.circle(writable, (rx, ry), 1, (255,0,0))
+                # cv2.imwrite("albumented.png", writable)
+
+                target = torch.tensor((rx / 224.0, ry / 224.0, lx / 224.0, ly  / 224.0))
+
         else:
             transform3 = transforms.Compose([transforms.ToTensor()])
             transform4= transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
@@ -200,7 +227,7 @@ def LoadPointsForImages(image_paths) :
 
 
 def trainModel() :
-    pngs = list_png_files_in_directory("cropped")
+    pngs = list_png_files_in_directory("expanded20percent")
     image_paths = []
     for imagename in pngs :
         image_paths.append(imagename)
@@ -227,24 +254,25 @@ def trainModel() :
     val_targets =val_points_array
 
 
-    # Define Albumentations transforms
-    transform = A.Compose([
-        A.Resize(224, 224),
-        A.HorizontalFlip(p=0.5),
-        A.RandomBrightnessContrast(p=0.2),
-        A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
-        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ToTensorV2(),
-    ], keypoint_params=A.KeypointParams(format='xy'))
+    # # Define Albumentations transforms
+    # transform = A.Compose([
+    #     A.Resize(224, 224),
+    #     A.HorizontalFlip(p=0.5),
+    #     A.RandomBrightnessContrast(p=0.2),
+    #     A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
+    #     A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+    #     ToTensorV2(),
+    # ], keypoint_params=A.KeypointParams(format='xy'))
     
-    train_dataset = CustomDataset(train_dataset, train_targets)
-    val_dataset = CustomDataset(val_dataset, val_targets)
-    #dataset = CustomDataset(image_paths, targets, transform=transform)
+    # train_dataset = CustomDataset(train_dataset, train_targets)
+    # val_dataset = CustomDataset(val_dataset, val_targets)
+    train_dataset = CustomDataset(train_dataset, train_targets, doTransform=True)
+    val_dataset = CustomDataset(val_dataset, val_targets, doTransform=True)
 
     # Hyperparameters
     batch_size = 32
-    epochs = 100
-    learning_rate = 0.001
+    epochs = 50
+    learning_rate = 0.0005
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
@@ -285,7 +313,7 @@ def trainModel() :
 
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)
-        model_name = "resnet18_regression_ckpt" + str(epoch + 1)+ ".onnx"
+        model_name = "resnet18_regression_album_ckpt" + str(epoch + 1)+ ".onnx"
         torch.onnx.export(model, dummy_input, model_name, 
                           input_names=["input"], output_names=["output"], 
                           opset_version=11)
@@ -305,7 +333,7 @@ def testModelOnImage(image_path) :
     input_tensor = Preprocess(image)
     input_tensor = input_tensor.reshape(1, 3, 224, 224)
         # Run inference
-    ort_session = ort.InferenceSession("resnet18_regression_noalbum.onnx")
+    ort_session = ort.InferenceSession("resnet18_regression_ckpt85.onnx")
     input_np = input_tensor.cpu().numpy()
     logger.debug(input_np.shape)
 
@@ -358,9 +386,9 @@ def testModelOnImage(image_path) :
 
 
 def main():
-    ParseCVATXMLFile("datasets/images_cvat_04092025/annotations.xml", "datasets/images_cvat_04092025/images/default", "expanded20percent")
-    #trainModel()
-    # pngfiles = list_png_files_in_directory("cropped")
+    #ParseCVATXMLFile("datasets/images_cvat_04092025/annotations.xml", "datasets/images_cvat_04092025/images/default", "expanded20percent")
+    trainModel()
+    # pngfiles = list_png_files_in_directory("expanded20percent")
     # for png in pngfiles:
     #     testModelOnImage(png)
 
