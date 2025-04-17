@@ -21,7 +21,7 @@ import onnxruntime as ort
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from symbol import factor
-
+import matplotlib.pyplot as plt
 
 def ParseCVATXMLFile(filename, images_dir, output_dir) :
     
@@ -272,7 +272,7 @@ def trainModel() :
     # Hyperparameters
     batch_size = 32
     epochs = 50
-    learning_rate = 0.0005
+    learning_rate = 0.0001
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
@@ -282,7 +282,9 @@ def trainModel() :
     model = ResNet18Regression().to(device)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
+    training_losses = []
+    validation_losses = []
+    
     # Training loop
     for epoch in range(epochs):
         model.train()
@@ -298,6 +300,7 @@ def trainModel() :
         
             running_loss += loss.item()
     
+        training_losses.append(running_loss)
         print(f"Training Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_dataloader):.8f}")
 
         model.eval()
@@ -308,16 +311,26 @@ def trainModel() :
                 outputs = model(images)
                 loss = criterion(outputs, targets)
                 val_loss += loss.item()
-    
+        validation_losses.append(val_loss)
         print(f"Validation Epoch [{epoch+1}/{epochs}], Loss: {val_loss/len(val_dataset):.8f}")
 
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)
-        model_name = "resnet18_regression_album_ckpt" + str(epoch + 1)+ ".onnx"
+        model_name = "resnet18_regression_LR0001_ckpt" + str(epoch + 1)+ ".onnx"
         torch.onnx.export(model, dummy_input, model_name, 
                           input_names=["input"], output_names=["output"], 
                           opset_version=11)
 
+    # Create an array for the x-axis (optional if you want custom x-values)
+    x = np.arange(len(training_losses))
+
+    # Plot the array
+    plt.plot(x, training_losses, marker='o', linestyle='-', color='b', label='Training')
+    plt.plot(x, validation_losses, marker='o', linestyle='-', color='r', label='validation')
+    plt.title('Simple Array Plot')
+    plt.xlabel('Index')
+    plt.ylabel('Value')
+    plt.show()
 
 
 def Preprocess(image) :
@@ -333,7 +346,7 @@ def testModelOnImage(image_path) :
     input_tensor = Preprocess(image)
     input_tensor = input_tensor.reshape(1, 3, 224, 224)
         # Run inference
-    ort_session = ort.InferenceSession("resnet18_regression_ckpt85.onnx")
+    ort_session = ort.InferenceSession("resnet18_regression_album_ckpt50.onnx")
     input_np = input_tensor.cpu().numpy()
     logger.debug(input_np.shape)
 
@@ -378,7 +391,7 @@ def testModelOnImage(image_path) :
     
    
     output_filename = os.path.basename(image_path)
-    output_filename = "outputs_noalbum/" + output_filename 
+    output_filename = "outputs_testAlbum/" + output_filename 
     cv2.imwrite(output_filename, image)
     # cv2.imshow('Circles', image)
     # cv2.waitKey(0)
