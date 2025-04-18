@@ -206,3 +206,8 @@ datasets/
 outputs/
 .vs/
 demo/
+testInputs/
+testInputs2/
+cropped/
+expanded20percent/
+outputs_noalbum/

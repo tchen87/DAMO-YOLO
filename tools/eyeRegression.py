@@ -252,17 +252,6 @@ def trainModel() :
 
     # Dummy data
     val_targets =val_points_array
-
-
-    # # Define Albumentations transforms
-    # transform = A.Compose([
-    #     A.Resize(224, 224),
-    #     A.HorizontalFlip(p=0.5),
-    #     A.RandomBrightnessContrast(p=0.2),
-    #     A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
-    #     A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-    #     ToTensorV2(),
-    # ], keypoint_params=A.KeypointParams(format='xy'))
     
     # train_dataset = CustomDataset(train_dataset, train_targets)
     # val_dataset = CustomDataset(val_dataset, val_targets)
@@ -299,9 +288,9 @@ def trainModel() :
             optimizer.step()
         
             running_loss += loss.item()
-    
-        training_losses.append(running_loss)
-        print(f"Training Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_dataloader):.8f}")
+        avg_training_loss = running_loss/len(train_dataloader)
+        training_losses.append(avg_training_loss )
+        print(f"Training Epoch [{epoch+1}/{epochs}], Loss: {avg_training_loss :.8f}")
 
         model.eval()
         val_loss = 0.0
@@ -311,8 +300,9 @@ def trainModel() :
                 outputs = model(images)
                 loss = criterion(outputs, targets)
                 val_loss += loss.item()
-        validation_losses.append(val_loss)
-        print(f"Validation Epoch [{epoch+1}/{epochs}], Loss: {val_loss/len(val_dataset):.8f}")
+        avg_validation_loss = val_loss/len(val_dataloader)
+        validation_losses.append(avg_validation_loss)
+        print(f"Validation Epoch [{epoch+1}/{epochs}], Loss: {avg_validation_loss:.8f}")
 
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)

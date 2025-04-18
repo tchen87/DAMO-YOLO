@@ -7,22 +7,6 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = 'datasets'
     DATASETS = {
-        'train_coco_03282025': {
-            'img_dir': 'training_03282025/images/default',
-            'ann_file': 'training_03282025/annotations/train.json'
-            },
-        'val_coco_03282025': {
-            'img_dir': 'training_03282025/images/default',
-            'ann_file': 'training_03282025/annotations/val.json'
-            },
-        'train_coco_04032025': {
-            'img_dir': 'training_04032025/images/default',
-            'ann_file': 'training_04032025/annotations/train.json'
-            },
-        'val_coco_04032025': {
-            'img_dir': 'training_04032025/images/default',
-            'ann_file': 'training_04032025/annotations/val.json'
-            },
         'train_coco_04072025': {
             'img_dir': 'training_04072025/images/default',
             'ann_file': 'training_04072025/annotations/train.json'
@@ -30,8 +14,15 @@ class DatasetCatalog(object):
         'val_coco_04072025': {
             'img_dir': 'training_04072025/images/default',
             'ann_file': 'training_04072025/annotations/val.json'
+            },
+        'train_coco_04182025': {
+            'img_dir': 'face_training_04182025/images/default',
+            'ann_file': 'face_training_04182025/annotations/train.json'
+            },
+        'val_coco_04182025': {
+            'img_dir': 'face_training_04182025/images/default',
+            'ann_file': 'face_training_04182025/annotations/val.json'
             } 
-  
         }
 
     @staticmethod
