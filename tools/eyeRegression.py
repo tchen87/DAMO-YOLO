@@ -1,4 +1,5 @@
 from re import X
+from turtle import distance
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
@@ -22,6 +23,8 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from symbol import factor
 import matplotlib.pyplot as plt
+import random
+import shutil
 
 def ParseCVATXMLFile(filename, images_dir, output_dir) :
     
@@ -226,18 +229,50 @@ def LoadPointsForImages(image_paths) :
     return all_points
 
 
-def trainModel() :
-    pngs = list_png_files_in_directory("expanded20percent")
-    image_paths = []
-    for imagename in pngs :
-        image_paths.append(imagename)
-
-    val_split = 0.2
-    val_size = int(len(image_paths) * val_split)
-    train_size = len(image_paths) - val_size
-    train_dataset, val_dataset = random_split(image_paths, [train_size, val_size])
+def SplitFolderContentsIntoTwoFolders(inputFolder,valFolder, trainFolder ) :
+    pngs = list_png_files_in_directory(inputFolder)
     
-    train_points = LoadPointsForImages(train_dataset)
+    os.makedirs(trainFolder, exist_ok=True)
+    os.makedirs(valFolder, exist_ok=True)
+    
+    random.shuffle(pngs)
+    split_index = int(len(pngs) // 5) # split 80:20
+    val_files = pngs[:split_index]
+    train_files = pngs[split_index:]
+    
+    # Move files to new folders
+    for f in val_files:
+        path, filename = os.path.split(f)
+        pngfilename_start = os.path.join(inputFolder, filename)
+        pngfilename_end = os.path.join(valFolder, filename)
+        
+        shutil.copy(pngfilename_start,  pngfilename_end)
+        
+        jsonfilename, ext = os.path.splitext(filename)
+        jsonfilename = jsonfilename + ".json"
+        jsonfilename_start = os.path.join(inputFolder, jsonfilename)
+        jsonfilename_end = os.path.join(valFolder, jsonfilename)
+        shutil.copy(jsonfilename_start,  jsonfilename_end)
+
+    for f in train_files:
+        path, filename = os.path.split(f)
+        pngfilename_start = os.path.join(inputFolder, filename)
+        pngfilename_end = os.path.join(trainFolder, filename)
+        
+        shutil.copy(pngfilename_start,  pngfilename_end)
+        
+        jsonfilename, ext = os.path.splitext(filename)
+        jsonfilename = jsonfilename + ".json"
+        jsonfilename_start = os.path.join(inputFolder, jsonfilename)
+        jsonfilename_end = os.path.join(trainFolder, jsonfilename)
+        shutil.copy(jsonfilename_start,  jsonfilename_end)
+
+    print(f"Moved {len(val_files)} files to {valFolder}")
+    print(f"Moved {len(train_files)} files to {trainFolder}")
+
+def trainModel() :
+    train_pngs = list_png_files_in_directory("eye_training_inputs_04222025")
+    train_points = LoadPointsForImages(train_pngs)
     
     # Convert list of points to a NumPy array
     train_points_array = np.array(train_points, dtype=np.float32)
@@ -245,7 +280,8 @@ def trainModel() :
     # Dummy data
     train_targets =train_points_array
 
-    val_points = LoadPointsForImages(val_dataset)
+    val_pngs = list_png_files_in_directory("eye_validation_inputs_04222025")
+    val_points = LoadPointsForImages(val_pngs)
     
     # Convert list of points to a NumPy array
     val_points_array = np.array(val_points, dtype=np.float32)
@@ -255,8 +291,8 @@ def trainModel() :
     
     # train_dataset = CustomDataset(train_dataset, train_targets)
     # val_dataset = CustomDataset(val_dataset, val_targets)
-    train_dataset = CustomDataset(train_dataset, train_targets, doTransform=True)
-    val_dataset = CustomDataset(val_dataset, val_targets, doTransform=True)
+    train_dataset = CustomDataset(train_pngs, train_targets, doTransform=True)
+    val_dataset = CustomDataset(val_pngs, val_targets, doTransform=False)
 
     # Hyperparameters
     batch_size = 32
@@ -306,7 +342,7 @@ def trainModel() :
 
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)
-        model_name = "resnet18_regression_LR0001_ckpt" + str(epoch + 1)+ ".onnx"
+        model_name = "resnet18_regression_04182025_ckpt" + str(epoch + 1)+ ".onnx"
         torch.onnx.export(model, dummy_input, model_name, 
                           input_names=["input"], output_names=["output"], 
                           opset_version=11)
@@ -331,27 +367,24 @@ def Preprocess(image) :
     image = transform4(image)
     return image
 
-def testModelOnImage(image_path) :
+def testModelOnImage(model_path, image_path) :
     image = cv2.imread(image_path)
     input_tensor = Preprocess(image)
     input_tensor = input_tensor.reshape(1, 3, 224, 224)
         # Run inference
-    ort_session = ort.InferenceSession("resnet18_regression_album_ckpt50.onnx")
+    ort_session = ort.InferenceSession(model_path)
     input_np = input_tensor.cpu().numpy()
-    logger.debug(input_np.shape)
 
     onnx_output = ort_session.run(None, {"input": input_np})
-    logger.debug(onnx_output[0][0])
-    rx = onnx_output[0][0][0]
-    ry = onnx_output[0][0][1]
-    lx = onnx_output[0][0][2]
-    ly = onnx_output[0][0][3]
+    rx_norm = onnx_output[0][0][0]
+    ry_norm = onnx_output[0][0][1]
+    lx_norm = onnx_output[0][0][2]
+    ly_norm = onnx_output[0][0][3]
     
-    lx = int(lx * image.shape[1])
-    ly = int(ly * image.shape[0])
-    rx = int(rx * image.shape[1])
-    ry = int(ry * image.shape[0])
-    logger.debug("left eye = {} {}, right eye = {} {}", lx, ly, rx, ry)
+    lx = int(lx_norm * image.shape[1])
+    ly = int(ly_norm * image.shape[0])
+    rx = int(rx_norm * image.shape[1])
+    ry = int(ry_norm * image.shape[0])
 
     cv2.circle(image, (lx, ly), 1, (0, 255, 0))
     cv2.circle(image, (rx, ry), 1, (0, 255, 0))
@@ -362,38 +395,54 @@ def testModelOnImage(image_path) :
 
     with open(jsonfilename, "r") as file:
         jsonstuff = json.load(file)
-    logger.debug(jsonstuff)
     points = jsonstuff['points']
     for point in points :
         if point['label'] == "Left eye" :
-            lx2 = point['x']
-            ly2 = point['y']
+            lx2_norm = point['x']
+            ly2_norm = point['y']
         elif point['label'] == "Right eye" :
-            rx2 = point['x']
-            ry2 = point['y']
+            rx2_norm = point['x']
+            ry2_norm = point['y']
             
-    lx2 = int(lx2 * image.shape[1])
-    ly2 = int(ly2 * image.shape[0])
-    rx2 = int(rx2 * image.shape[1])
-    ry2 = int(ry2 * image.shape[0])
+    lx2 = int(lx2_norm * image.shape[1])
+    ly2 = int(ly2_norm * image.shape[0])
+    rx2 = int(rx2_norm * image.shape[1])
+    ry2 = int(ry2_norm * image.shape[0])
     cv2.circle(image, (lx2, ly2), 1, (0, 0, 255))
     cv2.circle(image, (rx2, ry2), 1, (0, 0, 255))
     
-   
+    distance_l = cv2.norm(np.array([ly2_norm - ly_norm, lx2_norm - lx_norm]))
+    distance_r = cv2.norm(np.array([ry2_norm - ry_norm, rx2_norm - rx_norm]))
+
+    total_dist = distance_l + distance_r
+
     output_filename = os.path.basename(image_path)
-    output_filename = "outputs_testAlbum/" + output_filename 
+    output_filename = "benchmarking/" + output_filename 
     cv2.imwrite(output_filename, image)
-    # cv2.imshow('Circles', image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    
+    return total_dist
+
+def BenchmarkModel(model_path) :
+    pngfiles = list_png_files_in_directory("eye_validation_inputs_04222025")
+    total_distance = 0.0
+    for png in pngfiles:
+        distance = testModelOnImage(model_path, png)
+        total_distance += distance
+        
+    return total_distance
 
 
 def main():
-    #ParseCVATXMLFile("datasets/images_cvat_04092025/annotations.xml", "datasets/images_cvat_04092025/images/default", "expanded20percent")
-    trainModel()
-    # pngfiles = list_png_files_in_directory("expanded20percent")
-    # for png in pngfiles:
-    #     testModelOnImage(png)
+    #SplitFolderContentsIntoTwoFolders("eye_training_inputs_04182025", "eye_validation_inputs_04222025", "eye_training_inputs_04222025")
+    
+    #ParseCVATXMLFile("datasets/eye_training_04182025/annotations.xml", "datasets/eye_training_04182025/images/default", "eye_training_inputs_04182025")
+    #trainModel()
+    distance= BenchmarkModel("resnet18_regression_04182025_ckpt50.onnx")
+    logger.debug("distance = {}", distance)
+    distance= BenchmarkModel("resnet18_regression_04182025_ckpt1.onnx")
+    logger.debug("distance bad model = {}", distance)
+
+        
 
 if __name__ == '__main__':
     main()
