@@ -28,7 +28,7 @@ def make_parser():
         type=str,
         help='plz input your config file',
     )
-    parser.add_argument('--local-rank', type=int, default=0)
+    parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--tea_config', type=str, default=None)
     parser.add_argument('--tea_ckpt', type=str, default=None)
     parser.add_argument(
