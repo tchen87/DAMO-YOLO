@@ -22,6 +22,14 @@ class DatasetCatalog(object):
         'val_coco_04182025': {
             'img_dir': 'face_training_04182025/images/default',
             'ann_file': 'face_training_04182025/annotations/val.json'
+            },
+        'train_coco_04292025': {
+            'img_dir': 'face_training_04292025/images/default',
+            'ann_file': 'face_training_04292025/annotations/train.json'
+            },
+        'val_coco_04292025': {
+            'img_dir': 'face_training_04292025/images/default',
+            'ann_file': 'face_training_04292025/annotations/val.json'
             } 
         }
 
