@@ -27,7 +27,8 @@ import random
 import shutil
 
 def ParseCVATXMLFile(filename, images_dir, output_dir) :
-    
+    os.makedirs(output_dir, exist_ok=True)
+
     tree = ET.parse(filename)
     root = tree.getroot()
 
@@ -58,7 +59,7 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
             xbr = float(box.attrib["xbr"])
             ybr = float(box.attrib["ybr"])
 
-            factor = 0
+            factor = 0.2
             box_height = ybr - ytl
             box_width = xbr - xtl
 
@@ -271,7 +272,7 @@ def SplitFolderContentsIntoTwoFolders(inputFolder,valFolder, trainFolder ) :
     print(f"Moved {len(train_files)} files to {trainFolder}")
 
 def trainModel() :
-    train_pngs = list_png_files_in_directory("eye_training_inputs_NotExpanded_04242025")
+    train_pngs = list_png_files_in_directory("eye_training_inputs_nosplit_04292025")
     train_points = LoadPointsForImages(train_pngs)
     
     # Convert list of points to a NumPy array
@@ -280,7 +281,7 @@ def trainModel() :
     # Dummy data
     train_targets =train_points_array
 
-    val_pngs = list_png_files_in_directory("eye_validation_inputs_NotExpanded_04242025")
+    val_pngs = list_png_files_in_directory("bag_eyevalidation_04292025")
     val_points = LoadPointsForImages(val_pngs)
     
     # Convert list of points to a NumPy array
@@ -291,13 +292,13 @@ def trainModel() :
     
     # train_dataset = CustomDataset(train_dataset, train_targets)
     # val_dataset = CustomDataset(val_dataset, val_targets)
-    train_dataset = CustomDataset(train_pngs, train_targets, doTransform=False)
+    train_dataset = CustomDataset(train_pngs, train_targets, doTransform=True)
     val_dataset = CustomDataset(val_pngs, val_targets, doTransform=False)
 
     # Hyperparameters
-    batch_size = 32
+    batch_size = 8
     epochs = 50
-    learning_rate = 0.0001
+    learning_rate = 0.0002
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
@@ -342,13 +343,13 @@ def trainModel() :
 
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)
-        model_name = "resnet18_regression_noexpand_04242025_ckpt" + str(epoch + 1)+ ".onnx"
+        model_name = "resnet18_regression_04292025_nosplit_ckpt" + str(epoch + 1)+ ".onnx"
         torch.onnx.export(model, dummy_input, model_name, 
                           input_names=["input"], output_names=["output"], 
                           opset_version=11)
         
-        distance= BenchmarkModel(model_name)
-        logger.debug("distance = {}", distance)
+        # distance= BenchmarkModel(model_name)
+        # logger.debug("distance = {}", distance)
 
     # Create an array for the x-axis (optional if you want custom x-values)
     x = np.arange(len(training_losses))
@@ -426,7 +427,7 @@ def testModelOnImage(model_path, image_path) :
     return total_dist
 
 def BenchmarkModel(model_path) :
-    pngfiles = list_png_files_in_directory("eye_validation_inputs_NotExpanded_04242025")
+    pngfiles = list_png_files_in_directory("bag_eyevalidation_04292025")
     total_distance = 0.0
     for png in pngfiles:
         distance = testModelOnImage(model_path, png)
@@ -436,14 +437,14 @@ def BenchmarkModel(model_path) :
 
 
 def main():
-   # ParseCVATXMLFile("datasets/eye_training_04182025/annotations.xml", "datasets/eye_training_04182025/images/default", "eye_inputs_NotExpanded_04242025")
+    #ParseCVATXMLFile("eye_training_04292025/annotations.xml", "eye_training_04292025/images/default", "eye_training_inputs_nosplit_04292025")
     #SplitFolderContentsIntoTwoFolders("eye_inputs_NotExpanded_04242025", "eye_validation_inputs_NotExpanded_04242025", "eye_training_inputs_NotExpanded_04242025")
     
     
     trainModel()
-    # distance= BenchmarkModel("resnet18_regression_04242025_ckpt19.onnx")
+    # distance= BenchmarkModel("resnet18_regression_04292025_nosplit_ckpt50.onnx")
     # logger.debug("distance = {}", distance)
-    # distance= BenchmarkModel("resnet18_regression_04242025_ckpt20.onnx")
+    # distance= BenchmarkModel("resnet18_regression_04292025_nosplit_ckpt10.onnx")
     # logger.debug("distance bad model = {}", distance)
 
         
