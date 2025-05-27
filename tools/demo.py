@@ -250,7 +250,6 @@ class Infer():
         logger.debug('before postprocess output : {} ', output)
 
         bboxes, scores, cls_inds = self.postprocess(output, image, origin_shape=origin_shape)
-        logger.debug('origin shape {} ' , origin_shape)
 
         return bboxes, scores, cls_inds
 
