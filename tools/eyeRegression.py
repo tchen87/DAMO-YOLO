@@ -26,6 +26,37 @@ import matplotlib.pyplot as plt
 import random
 import shutil
 
+import argparse
+
+from torch._inductor.ir import NoneAsConstantBuffer
+from loguru import logger
+
+def make_parser():
+    parser = argparse.ArgumentParser('DAMO-YOLO Demo')
+
+    parser.add_argument('-a',
+                        '--annotations',
+                        default=None,
+                        type=str,
+                        help='Path to annotations.xml',)
+    parser.add_argument('-i',
+                        '--image_dir',
+                        default=None,
+                        type=str,
+                        help='Path to image directory')
+    parser.add_argument('-ti',
+                        '--training_images',
+                        default=None,
+                        type=str,
+                        help='Path to directory to place eye training images',)
+    parser.add_argument('-va',
+                        '--validation_images',
+                        default=None,
+                        type=str,
+                        help='Path to directory with validation images')
+    return parser
+
+
 def ParseCVATXMLFile(filename, images_dir, output_dir) :
     os.makedirs(output_dir, exist_ok=True)
 
@@ -111,12 +142,12 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
                 
 
                 cv2.imwrite(crop_path, cropped)
-            else : 
-                logger.debug("Did not find 2 points within the bounding box! Not writing out crop or json")
+            # else : 
+            #     logger.debug("Did not find 2 points within the bounding box! Not writing out crop or json")
 
 
 
-            print(f"Saved: {crop_path} with {len(crop_points)} points")
+            #print(f"Saved: {crop_path} with {len(crop_points)} points")
 
 
 # Define a custom dataset class
@@ -271,8 +302,8 @@ def SplitFolderContentsIntoTwoFolders(inputFolder,valFolder, trainFolder ) :
     print(f"Moved {len(val_files)} files to {valFolder}")
     print(f"Moved {len(train_files)} files to {trainFolder}")
 
-def trainModel() :
-    train_pngs = list_png_files_in_directory("eye_training_inputs_nosplit_04292025")
+def trainModel(training_dir, validation_dir) :
+    train_pngs = list_png_files_in_directory(training_dir)
     train_points = LoadPointsForImages(train_pngs)
     
     # Convert list of points to a NumPy array
@@ -281,7 +312,7 @@ def trainModel() :
     # Dummy data
     train_targets =train_points_array
 
-    val_pngs = list_png_files_in_directory("bag_eyevalidation_04292025")
+    val_pngs = list_png_files_in_directory(validation_dir)
     val_points = LoadPointsForImages(val_pngs)
     
     # Convert list of points to a NumPy array
@@ -343,7 +374,7 @@ def trainModel() :
 
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)
-        model_name = "resnet18_regression_04292025_nosplit_ckpt" + str(epoch + 1)+ ".onnx"
+        model_name = "epxEyeRegression_epoch" + str(epoch + 1)+ ".onnx"
         torch.onnx.export(model, dummy_input, model_name, 
                           input_names=["input"], output_names=["output"], 
                           opset_version=11)
@@ -437,15 +468,28 @@ def BenchmarkModel(model_path) :
 
 
 def main():
-    #ParseCVATXMLFile("eye_training_04292025/annotations.xml", "eye_training_04292025/images/default", "eye_training_inputs_nosplit_04292025")
-    #SplitFolderContentsIntoTwoFolders("eye_inputs_NotExpanded_04242025", "eye_validation_inputs_NotExpanded_04242025", "eye_training_inputs_NotExpanded_04242025")
-    
-    
-    trainModel()
-    # distance= BenchmarkModel("resnet18_regression_04292025_nosplit_ckpt50.onnx")
-    # logger.debug("distance = {}", distance)
-    # distance= BenchmarkModel("resnet18_regression_04292025_nosplit_ckpt10.onnx")
-    # logger.debug("distance bad model = {}", distance)
+    args = make_parser().parse_args()
+    annotations = args.annotations
+    image_dir = args.image_dir
+    training_images = args.training_images
+    validation_images = args.validation_images
+
+    if annotations == None :
+        logger.debug("Annotations file path required")
+        return
+    if image_dir == None :
+        logger.debug("Original images directory required")
+        return
+    if training_images == None :
+        logger.debug("Eye training image directory name required")
+        return
+    if validation_images == None :
+        logger.debug("Validation image directory path required")
+        return
+
+    ParseCVATXMLFile(annotations, image_dir, training_images)
+    trainModel(training_images, validation_images)
+
 
         
 

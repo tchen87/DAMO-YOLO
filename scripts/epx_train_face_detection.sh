@@ -1,9 +1,10 @@
 #!/bin/bash
+#In most situations, only need to alter the name of the directory under "datasets"
 INSTANCES_PATH="datasets/exampleName/annotations/instances_default.json"
 TRAIN_JSON_PATH="datasets/exampleName/annotations/train.json"
 VAL_JSON_PATH="datasets/exampleName/annotations/val.json"
 IMG_DIR="datasets/exampleName/images/default"
-#NOTE: These must start with "coco" 
+#NOTE: These must start with "coco". Good to add a date to the name
 TRAIN_NAME="coco_train_example"
 VAL_NAME="coco_val_example"
 export PYTHONPATH=$PWD:$PYTHONPATH
