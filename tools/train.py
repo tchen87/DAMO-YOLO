@@ -61,8 +61,7 @@ def main():
         tea_config = None
 
     config = parse_config(args.config_file)
-    config.dataset.train_ann = args.train_ann
-    config.dataset.val_ann = args.val_ann
+    config.set_training_validation_names((args.train_ann ,), (args.val_ann, ))
     config.merge(args.opts)
 
 
