@@ -211,3 +211,14 @@ testInputs2/
 cropped/
 expanded20percent/
 outputs_noalbum/
+bag_eyevalidation_04292025/
+bagValidationCVAT/
+benchmarking/
+eye_inputs_NotExpanded_04242025/
+eye_training_04292025/
+eye_training_inputs_04182025/
+eye_training_inputs_04222025/
+eye_training_inputs_nosplit_04292025/
+eye_training_inputs_NotExpanded_04242025/
+eye_validation_inputs_04222025/
+eye_validation_inputs_NotExpanded_04242025/

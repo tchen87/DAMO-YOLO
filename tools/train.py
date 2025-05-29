@@ -31,6 +31,8 @@ def make_parser():
     parser.add_argument('--local-rank', type=int, default=0)
     parser.add_argument('--tea_config', type=str, default=None)
     parser.add_argument('--tea_ckpt', type=str, default=None)
+    parser.add_argument('--train_ann', type=str, default=None, help='name of training dataset')
+    parser.add_argument('--val_ann', type=str, default=None, help='name of validation dataset')
     parser.add_argument(
         'opts',
         help='Modify config options using the command-line',
@@ -43,6 +45,12 @@ def make_parser():
 @logger.catch
 def main():
     args = make_parser().parse_args()
+    if args.train_ann == None :
+        logger.debug("Training dataset name required")
+        return
+    if args.val_ann== None :
+        logger.debug("Validation dataset name required")
+        return
 
     torch.cuda.set_device(args.local_rank)
     torch.distributed.init_process_group(backend='nccl', init_method='env://')
@@ -53,6 +61,8 @@ def main():
         tea_config = None
 
     config = parse_config(args.config_file)
+    config.dataset.train_ann = args.train_ann
+    config.dataset.val_ann = args.val_ann
     config.merge(args.opts)
 
 

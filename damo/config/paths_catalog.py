@@ -5,31 +5,39 @@ import os
 
 
 class DatasetCatalog(object):
-    DATA_DIR = 'datasets'
+    DATA_DIR = ''
     DATASETS = {
+        'coco_train_example': {
+            'img_dir': 'datasets/exampleName/images/default',
+            'ann_file': 'datasets/exampleName/annotations/train.json'
+            },
+        'coco_val_example': {
+            'img_dir': 'datasets/exampleName/images/default',
+            'ann_file': 'datasets/exampleName/annotations/val.json'
+            },
         'train_coco_04072025': {
-            'img_dir': 'training_04072025/images/default',
-            'ann_file': 'training_04072025/annotations/train.json'
+            'img_dir': 'datasets/training_04072025/images/default',
+            'ann_file': 'datasets/training_04072025/annotations/train.json'
             },
         'val_coco_04072025': {
-            'img_dir': 'training_04072025/images/default',
-            'ann_file': 'training_04072025/annotations/val.json'
+            'img_dir': 'datasets/training_04072025/images/default',
+            'ann_file': 'datasets/training_04072025/annotations/val.json'
             },
         'train_coco_04182025': {
-            'img_dir': 'face_training_04182025/images/default',
-            'ann_file': 'face_training_04182025/annotations/train.json'
+            'img_dir': 'datasets/face_training_04182025/images/default',
+            'ann_file': 'datasets/face_training_04182025/annotations/train.json'
             },
         'val_coco_04182025': {
-            'img_dir': 'face_training_04182025/images/default',
-            'ann_file': 'face_training_04182025/annotations/val.json'
+            'img_dir': 'datasets/face_training_04182025/images/default',
+            'ann_file': 'datasets/face_training_04182025/annotations/val.json'
             },
         'train_coco_04292025': {
-            'img_dir': 'face_training_04292025/images/default',
-            'ann_file': 'face_training_04292025/annotations/train.json'
+            'img_dir': 'datasets/face_training_04292025/images/default',
+            'ann_file': 'datasets/face_training_04292025/annotations/train.json'
             },
         'val_coco_04292025': {
-            'img_dir': 'face_training_04292025/images/default',
-            'ann_file': 'face_training_04292025/annotations/val.json'
+            'img_dir': 'datasets/face_training_04292025/images/default',
+            'ann_file': 'datasets/face_training_04292025/annotations/val.json'
             } 
         }
 

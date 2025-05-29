@@ -43,25 +43,6 @@ def make_parser():
     return parser
 
 
-class DatasetUpdater(ast.NodeTransformer):
-    def __init__(self, new_entries):
-        self.new_entries = new_entries
-
-    def visit_Assign(self, node):
-        if (isinstance(node.targets[0], ast.Attribute) and
-            node.targets[0].attr == 'DATASETS'):
-
-            if isinstance(node.value, ast.Dict):
-                for entry in self.new_entries:
-                    key_node = ast.Str(s=entry['name'])
-                    val_node = ast.Dict(
-                        keys=[ast.Str(s='img_dir'), ast.Str(s='ann_file')],
-                        values=[ast.Str(s=entry['img_dir']), ast.Str(s=entry['ann_file'])]
-                    )
-                    node.value.keys.append(key_node)
-                    node.value.values.append(val_node)
-        return node
-
 
 def add_datasets_to_file(file_path, new_entries):
     with open(file_path, 'r') as f:
@@ -140,6 +121,7 @@ def main():
     ]
 
     add_datasets_to_file(paths_catalog_path, new_entries)
+
 
 
 if __name__ == '__main__':

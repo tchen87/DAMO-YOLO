@@ -114,6 +114,12 @@ class Config(metaclass=ABCMeta):
             structure = f.read()
 
         return structure
+    
+    def set_training_validation_names(self, train_ann, val_ann) :
+        self.dataset.train_ann =train_ann
+        self.dataset.val_ann = val_ann
+
+
 
 
 def get_config_by_file(config_file):
