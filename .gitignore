@@ -23,7 +23,7 @@
 datasets/coco/
 nas_backbones/
 configs/
-scripts/
+#scripts/
 # MATLAB GitIgnore -----------------------------------------------------------------------------------------------------
 *.m~
 *.mat
