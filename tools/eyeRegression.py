@@ -358,7 +358,7 @@ def trainModel(training_dir, validation_dir) :
             running_loss += loss.item()
         avg_training_loss = running_loss/len(train_dataloader)
         training_losses.append(avg_training_loss )
-        print(f"Training Epoch [{epoch+1}/{epochs}], Loss: {avg_training_loss :.8f}")
+        print(f"Training Epoch [{epoch}/{epochs}], Loss: {avg_training_loss :.8f}")
 
         model.eval()
         val_loss = 0.0
@@ -370,11 +370,11 @@ def trainModel(training_dir, validation_dir) :
                 val_loss += loss.item()
         avg_validation_loss = val_loss/len(val_dataloader)
         validation_losses.append(avg_validation_loss)
-        print(f"Validation Epoch [{epoch+1}/{epochs}], Loss: {avg_validation_loss:.8f}")
+        print(f"Validation Epoch [{epoch}/{epochs}], Loss: {avg_validation_loss:.8f}")
 
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)
-        model_name = "epxEyeRegression_epoch" + str(epoch + 1)+ ".onnx"
+        model_name = "epxEyeRegression_epoch" + str(epoch)+ ".onnx"
         torch.onnx.export(model, dummy_input, model_name, 
                           input_names=["input"], output_names=["output"], 
                           opset_version=11)
