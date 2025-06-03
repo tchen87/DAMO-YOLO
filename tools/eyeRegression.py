@@ -85,19 +85,19 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
 
         for idx, box in enumerate(image.findall(".//box")):
             label = box.attrib["label"]
-            xtl = float(box.attrib["xtl"])
-            ytl = float(box.attrib["ytl"])
-            xbr = float(box.attrib["xbr"])
-            ybr = float(box.attrib["ybr"])
+            orig_xtl = float(box.attrib["xtl"])
+            orig_ytl = float(box.attrib["ytl"])
+            orig_xbr = float(box.attrib["xbr"])
+            orig_ybr = float(box.attrib["ybr"])
 
             factor = 0.2
             box_height = ybr - ytl
             box_width = xbr - xtl
 
-            xtl = xtl - box_width * factor
-            ytl = ytl - box_height * factor
-            xbr = xbr + box_width * factor
-            ybr = ybr + box_height * factor
+            xtl = orig_xtl - box_width * factor
+            ytl = orig_ytl - box_height * factor
+            xbr = orig_xbr + box_width * factor
+            ybr = orig_ybr + box_height * factor
 
             if xtl < 0 :
                 xtl = 0
@@ -121,7 +121,7 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
                 label_pt = point.attrib.get("label", "")
                 for px_pair in px_str.split(';'):
                     px, py = map(float, px_pair.split(','))
-                    if xtl <= px <= xbr and ytl <= py <= ybr:
+                    if orig_xtl <= px <= orig_xbr and orig_ytl <= py <= orig_ybr:
                         # Normalize point coordinates relative to crop
                         norm_x = (px - xtl) / (xbr - xtl)
                         norm_y = (py - ytl) / (ybr - ytl)
