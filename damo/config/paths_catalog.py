@@ -7,6 +7,22 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = ''
     DATASETS = {
+        'coco_train_10222025': {
+            'img_dir': 'datasets/fullDataset_10222025_coco/images/default',
+            'ann_file': 'datasets/fullDataset_10222025_coco/annotations/train.json'
+            },
+        'coco_val_10222025': {
+            'img_dir': 'datasets/fullDataset_10222025_coco/images/default',
+            'ann_file': 'datasets/fullDataset_10222025_coco/annotations/val.json'
+            },
+        'coco_train_04292025': {
+            'img_dir': 'datasets/face_training_04292025/images/default',
+            'ann_file': 'datasets/face_training_04292025/annotations/train.json'
+            },
+        'coco_val_04292025': {
+            'img_dir': 'datasets/face_training_04292025/images/default',
+            'ann_file': 'datasets/face_training_04292025/annotations/val.json'
+            },
         'coco_train_example': {
             'img_dir': 'datasets/exampleName/images/default',
             'ann_file': 'datasets/exampleName/annotations/train.json'

@@ -91,8 +91,8 @@ def ParseCVATXMLFile(filename, images_dir, output_dir) :
             orig_ybr = float(box.attrib["ybr"])
 
             factor = 0.2
-            box_height = ybr - ytl
-            box_width = xbr - xtl
+            box_height = orig_ybr - orig_ytl
+            box_width = orig_xbr - orig_xtl
 
             xtl = orig_xtl - box_width * factor
             ytl = orig_ytl - box_height * factor
