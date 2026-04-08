@@ -76,8 +76,11 @@ class ema_model:
         self.ema_scheduler = lambda x: ema_momentum * (1 - math.exp(-x / 2000))
 
     def update(self, iters, student):
-
-        student = student.module.state_dict()
+        if hasattr(student, 'module'):
+            student = student.module.state_dict()
+        else:
+            student = student.state_dict()      
+            
         with torch.no_grad():
             momentum = self.ema_scheduler(iters)
             for name, param in self.model.state_dict().items():
@@ -267,7 +270,9 @@ class Trainer:
             get_model_info(self.model, (infer_shape, infer_shape))))
 
         # distributed model init
-        self.model = build_ddp_model(self.model, local_rank)
+        if torch.distributed.get_world_size() > 1:
+            self.model = build_ddp_model(self.model, local_rank)
+            
         logger.info('Model: {}'.format(self.model))
 
         logger.info('Training start...')

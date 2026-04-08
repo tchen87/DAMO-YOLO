@@ -56,7 +56,7 @@ def unmap(data, count, inds, fill=0):
 
 def reduce_mean(tensor):
     """"Obtain the mean of tensor on different GPUs."""
-    if not (dist.is_available() and dist.is_initialized()):
+    if not (dist.is_available() and dist.is_initialized()) or dist.get_world_size() < 2:
         return tensor
     tensor = tensor.clone()
     dist.all_reduce(tensor.div_(dist.get_world_size()), op=dist.ReduceOp.SUM)

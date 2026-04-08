@@ -1,7 +1,7 @@
 timm
 omegaconf
 numpy
-opencv_python
+opencv-python
 loguru
 scikit-image
 tqdm
@@ -9,3 +9,9 @@ Pillow
 thop
 tabulate
 easydict
+cython
+pycocotools
+funcy
+astor
+scikit-learn
+scikit-multilearn @ git+https://github.com/scikit-multilearn/scikit-multilearn.git@0.2.0
