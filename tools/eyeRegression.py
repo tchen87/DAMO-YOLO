@@ -21,7 +21,6 @@ import onnxruntime as ort
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from symbol import factor
 import matplotlib.pyplot as plt
 import random
 import shutil
