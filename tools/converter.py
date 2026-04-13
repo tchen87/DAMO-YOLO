@@ -235,7 +235,7 @@ def main():
     dummy_input = torch.randn(args.batch_size, 3, args.img_size,
                               args.img_size).to(device)
     _ = model(dummy_input)
-    torch.onnx._export(
+    torch.onnx.export(
         model,
         dummy_input,
         onnx_name,
@@ -243,6 +243,7 @@ def main():
         output_names=['num_dets', 'det_boxes', 'det_scores', 'det_classes']
         if args.end2end else [args.output],
         opset_version=args.opset,
+        dynamo=False
     )
     onnx_model = onnx.load(onnx_name)
     # Fix output shape
