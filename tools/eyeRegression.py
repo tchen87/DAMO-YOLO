@@ -257,6 +257,7 @@ def LoadPointsForImages(image_paths) :
             
         # Store them as a tuple (x, y)
         all_points.append((righteyex, righteyey, lefteyex, lefteyey))
+        
     return all_points
 
 
@@ -370,13 +371,17 @@ def trainModel(training_dir, validation_dir) :
         avg_validation_loss = val_loss/len(val_dataloader)
         validation_losses.append(avg_validation_loss)
         print(f"Validation Epoch [{epoch}/{epochs}], Loss: {avg_validation_loss:.8f}")
-
+        
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, factor=0.5)
+        # then after validation loss:
+        scheduler.step(avg_validation_loss)
+        
         # Export model to ONNX
         dummy_input = torch.randn(1, 3, 224, 224).to(device)
         model_name = "epxEyeRegression_epoch" + str(epoch)+ ".onnx"
         torch.onnx.export(model, dummy_input, model_name, 
                           input_names=["input"], output_names=["output"], 
-                          opset_version=11)
+                          opset_version=18, dynamo=False)
         
         # distance= BenchmarkModel(model_name)
         # logger.debug("distance = {}", distance)
@@ -405,8 +410,11 @@ def testModelOnImage(model_path, image_path) :
     image = cv2.imread(image_path)
     input_tensor = Preprocess(image)
     input_tensor = input_tensor.reshape(1, 3, 224, 224)
-        # Run inference
-    ort_session = ort.InferenceSession(model_path)
+    
+    # Run inference
+    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if torch.cuda.is_available() else ["CPUExecutionProvider"]
+    logger.debug("providers = {}", providers)
+    ort_session = ort.InferenceSession(model_path, providers=providers)
     input_np = input_tensor.cpu().numpy()
 
     onnx_output = ort_session.run(None, {"input": input_np})
@@ -453,7 +461,6 @@ def testModelOnImage(model_path, image_path) :
     output_filename = os.path.basename(image_path)
     output_filename = "benchmarking/" + output_filename 
     cv2.imwrite(output_filename, image)
-    
     return total_dist
 
 def BenchmarkModel(model_path) :

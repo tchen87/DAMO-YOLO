@@ -15,6 +15,7 @@ funcy
 astor
 scikit-learn
 scikit-multilearn @ git+https://github.com/scikit-multilearn/scikit-multilearn.git@0.2.0
-onnxruntime
+onnxruntime-gpu
 albumentations
 matplotlib
+onnxscript
