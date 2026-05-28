@@ -268,7 +268,7 @@ def SplitFolderContentsIntoTwoFolders(inputFolder,valFolder, trainFolder ) :
     os.makedirs(valFolder, exist_ok=True)
     
     random.shuffle(pngs)
-    split_index = int(len(pngs) // 5) # split 80:20
+    split_index = int(len(pngs) * 0.15) # split 85:15
     val_files = pngs[:split_index]
     train_files = pngs[split_index:]
     
@@ -492,8 +492,9 @@ def main():
     if validation_images == None :
         logger.debug("Validation image directory path required")
         return
-
-    ParseCVATXMLFile(annotations, image_dir, training_images)
+    tempDir = os.path.join(os.path.dirname(training_images), "tempDir")
+    ParseCVATXMLFile(annotations, image_dir, tempDir)
+    SplitFolderContentsIntoTwoFolders(tempDir, validation_images, training_images)
     trainModel(training_images, validation_images)
 
 
